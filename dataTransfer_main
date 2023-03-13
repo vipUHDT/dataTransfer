@@ -1,3 +1,6 @@
+# Source about connecting to drone and getting message https://mavlink.io/en/mavgen_python/
+#second source about connecting drone https://dronekit-python.readthedocs.io/en/latest/examples/vehicle_state.html
+
 import time
 import os
 import subprocess
