@@ -15,8 +15,9 @@ currentDir =os.getcwd()
 print(currentDir)
 
 #connecting the to the drone or ardupilot or pixhawk
-mav = mavutil.mavlink_connection('/dev/ttyS0', baud=57600)
-
+#mav = mavutil.mavlink_connection('/dev/ttyS0', baud=57600)
+connection_string = 'serial:/dev/ttyAMA0:57600'
+vehicle = connect(connection_string, wait_ready=True)
 #Testing print connection
 if vehicle.armed == True:
     print("CONNECTION SUCCESSFUL!!")
