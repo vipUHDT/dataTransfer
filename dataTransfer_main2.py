@@ -11,29 +11,21 @@ from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGloba
 #CHANGE THE NUMBERS TO THE WAYPOINT NUMBERS THAT THE CAMERA IS GOING TO BE TRIGGERED
 triggerWp = [1,3, 6, 9, 12, 15, 18, 20] 
 
-#CHANGE THE NUMBER TO WHERE THE WAYPOINT OF THE UAS IS CLOSER TO GROUND STATION
-transferWp = 1
-
-#CHANGE THE IP TO THE IP OF THE GCS LAPTOP
-HOST = '192.168.137.1' #HOST OF THE GCS
-filenames = ['image1.jpg','image2.jpg','image3.jpg','image4.jpg','image5.jpg']
-
 #############################################################
 connection_string = "/dev/ttyACM0" #usb to micro usb
 #connection_string = "/dev/serial0" #uart pin to gps2 port
+
 #baud rate for for connecting to the drone
 baud_rate = 921600
-#file size declared
-BUFFER_SIZE = 4096
-#port number can be anything but small numbers since the ports are occupied
-PORT = 5000
+
+
 #labels for the image 
-image_number= 0
-#number of images that need to be tranferred
-num_of_images = len(filenames)
+image_number= 1
+
 #moving directories to where images are going to be saved and transferred from
 os.chdir('image')
 currentDir =os.getcwd()
+
 #opening a text file to be written for data/code tracking
 f = open("testData.txt", "w")
 
