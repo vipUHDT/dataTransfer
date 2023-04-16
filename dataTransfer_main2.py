@@ -122,7 +122,7 @@ def triggerCommand(num,pitch,roll,yaw,lat,lon,alt):
     subprocess.run(tagAltCommand,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
-for x in range(len(triggerWp)):
+for x in triggerWp:
 
 	while True:
 		if(vehicle.commands.next == triggerWp[x]):
@@ -141,34 +141,9 @@ for x in range(len(triggerWp)):
 			#triggerCommand(triggerWp[x],pitch,roll,yaw,lat,lon,alt)
 			triggerCommand(image_number,pitch,roll,yaw,lat,lon,alt)			
 			image_number=image_number+1
-			#remove the duplicate image file
-			#os.remove("image"+str(x)+".jpg_original")
 			f.write("#######################################")
 			break
 
-while True:
-	#once the UAS has arrived to the waypoint it will be transferred to
-	if (vehicle.commands.next == transferWp):
-		#transfer the images
-		for x in range(num_of_images):
-			#creating a socket
-			client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			#connecting to the  GCS with given HOST and PORT
-			print(f"[+] Connecting to {HOST}:{PORT}")
-			client.connect((HOST,PORT))
-			print("[+] Connected.")
-			print(x)
-			#once we reach an error. it means it has finished sending
-			try:
-				file = open(filenames[x], "rb")
-				image_data = file.read(BUFFER_SIZE)
-				#sending the images in chunks
-				while image_data: 
-					#sending the chunck of the image
-					client.send(image_data)
-					image_data =file.read(BUFFER_SIZE)
-			except:
-				print("Finished Sending")
 
 f.close()
 
