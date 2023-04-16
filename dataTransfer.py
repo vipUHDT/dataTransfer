@@ -1,17 +1,43 @@
 import time
+import socket
 import os
 import subprocess
 from pymavlink import mavutil
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
-triggerWp = [1,3, 6, 9, 12, 15, 18, 20]
 
+#CHANGE ME 
+############################################################
+
+#CHANGE THE NUMBERS TO THE WAYPOINT NUMBERS THAT THE CAMERA IS GOING TO BE TRIGGERED
+triggerWp = [1,3, 6, 9, 12, 15, 18, 20] 
+
+#############################################################
 connection_string = "/dev/ttyACM0" #usb to micro usb
 #connection_string = "/dev/serial0" #uart pin to gps2 port
 
+#baud rate for for connecting to the drone
 baud_rate = 921600
 
+
+#labels for the image 
+image_number= 1
+
+#moving directories to where images are going to be saved and transferred from
+os.chdir('image')
+currentDir =os.getcwd()
+
+#opening a text file to be written for data/code tracking
+f = open("testData.txt", "w")
+
+#connect the camera
+connectCMD = ('gphoto2','--auto-detect')
+result=subprocess.run(connectCMD,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+print('Camera Connected')
+
+#connecting to UAS
 print("Connecting to UAS")
 vehicle = connect(connection_string, baud=baud_rate, wait_ready = True)
+print("Connected")
 
 
 #sets the attidue and gps coordinate to variables
@@ -88,25 +114,7 @@ def triggerCommand(num,pitch,roll,yaw,lat,lon,alt):
     subprocess.run(tagAltCommand,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
-#moving directories 
-os.chdir('image')
-currentDir =os.getcwd()
-#opening a text file to be written 
-f = open("testData.txt", "w")
-
-#connect the camera
-connectCMD = ('gphoto2','--auto-detect')
-result=subprocess.run(connectCMD,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-print('Camera Connected')
-
-
-#vehicle.wait_ready('autopilot_version')
-num=1
-#print('Drone is %s' % vehicle.armed)
-
-i= 0
-
-for x in range(len(triggerWp)):
+for x in triggerWp:
 
 	while True:
 		if(vehicle.commands.next == triggerWp[x]):
@@ -122,11 +130,12 @@ for x in range(len(triggerWp)):
 			f.write("latitude: "+str(lat)+"\n")
 			f.write("longitude: "+str(lon)+"\n")
 			f.write("altitude: "+str(alt)+"\n")
-			triggerCommand(triggerWp[x],pitch,roll,yaw,lat,lon,alt)
-			i=i+1
-			#os.remove("image"+str(x)+".jpg_original")
+			#triggerCommand(triggerWp[x],pitch,roll,yaw,lat,lon,alt)
+			triggerCommand(image_number,pitch,roll,yaw,lat,lon,alt)			
+			image_number=image_number+1
 			f.write("#######################################")
 			break
+
 
 f.close()
 
