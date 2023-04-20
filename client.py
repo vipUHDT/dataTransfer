@@ -6,6 +6,7 @@ import time
 BUFFER_SIZE = 4096
 #move to the directory where images are
 os.chdir('image')
+folderName = "image"
 #host of the GCS
 HOST = '192.168.137.1'
 #port number can be anything but small numbers since the ports are occupied
@@ -13,8 +14,8 @@ PORT = 5000
 #number of images to be taken
 num_of_images = 20
 
+
 filenames = []
-folderName = "image"
 for x in range(num_of_images):
 	filenames.append(f"image{x+1}.jpg")
 	
@@ -28,7 +29,7 @@ for x in range(num_of_files):
 		path = (f"/home/UHDT_Pi/DataTransfer/{folderName}/"+filenames[x])
 		if(os.path.isfile(path)):
 			break
-		print(f"FILE {filename[x]} NOT FOUND")
+		print(f"FILE {filenames[x]} NOT FOUND")
 		time.sleep(1)
 	#creating a connection
 	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -42,8 +43,7 @@ for x in range(num_of_files):
 		while image_data:
 			client.send(image_data)
 			image_data =file.read(BUFFER_SIZE)
-			if(x == num_of_images-1):
-				print("Finished Sending x")
+			if(x == num_of_images):
 				break
 	except:
 		print("Finished Sending")
@@ -51,7 +51,6 @@ for x in range(num_of_files):
 		print("Finished Sending")
 		break
 		
-print("out of the loop")
 message = "END"
 client.send(message.encode('utf-8'))
 client.close()

@@ -18,10 +18,6 @@ connection_string = "/dev/ttyACM0" #usb to micro usb
 #baud rate for for connecting to the drone
 baud_rate = 921600
 
-
-#labels for the image 
-image_number= 1
-
 #moving directories to where images are going to be saved and transferred from
 os.chdir('image')
 currentDir =os.getcwd()
@@ -114,11 +110,11 @@ def triggerCommand(num,pitch,roll,yaw,lat,lon,alt):
     subprocess.run(tagAltCommand,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
-for x in triggerWp:
+for x in range(len(triggerWp)):
 
 	while True:
 		if(vehicle.commands.next == triggerWp[x]):
-			f.write("Uas has arrived at waypoint {x}. Now capturing image {x} \n")
+			f.write("Uas has arrived at waypoint {triggerWp[x]}. Now capturing image {x} \n")
 			a = vehicle.attitude
 			f.write(str(a)+"\n")
 			gps = vehicle.location.global_relative_frame
@@ -130,9 +126,7 @@ for x in triggerWp:
 			f.write("latitude: "+str(lat)+"\n")
 			f.write("longitude: "+str(lon)+"\n")
 			f.write("altitude: "+str(alt)+"\n")
-			#triggerCommand(triggerWp[x],pitch,roll,yaw,lat,lon,alt)
-			triggerCommand(image_number,pitch,roll,yaw,lat,lon,alt)			
-			image_number=image_number+1
+			triggerCommand(x+1,pitch,roll,yaw,lat,lon,alt)			
 			f.write("#######################################")
 			break
 
