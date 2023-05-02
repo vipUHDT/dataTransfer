@@ -1,18 +1,20 @@
 import time
+import math
 import socket
 import os
 import subprocess
+import gphoto2 as gp
+import exiftool
 from pymavlink import mavutil
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
 
 #CHANGE ME 
+start = 9 # the waypoint number when to start taking photos
 ############################################################
-
 #CHANGE THE NUMBERS TO THE WAYPOINT NUMBERS THAT THE CAMERA IS GOING TO BE TRIGGERED
 NUMBER_OF_IMAGES = 30 # number of images need to be taken
-start = 30 # the waypoint number when to start taking photos
 triggerWp = [] 
-for x in range(NUMBER_OF_IMAGES + 1): # appending from the start to the next 30
+for x in range(NUMBER_OF_IMAGES): # appending from the start to the next 30
     triggerWp.append(x+start)
 
 #############################################################
@@ -27,8 +29,8 @@ os.chdir('image')
 currentDir =os.getcwd()
 
 #connect the camera
-connectCMD = ('gphoto2','--auto-detect')
-result=subprocess.run(connectCMD,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+camera = gp.Camera()
+camera.init
 print('Camera Connected')
 
 #connecting to UAS
@@ -50,6 +52,9 @@ def attitude():
 	#Setting the variable  with gps coordinates, yaw pitch and roll
 	attitude = vehicle.attitude
 	attitude=str(attitude)
+	#Getting the UAS location in long and lat
+	gps = vehicle.location.global_relative_frame
+	gps = str(gps)
 	#using split method to split string so we can get individual value of yaw,pitch and roll
 	attitudeSplit = attitude.split(",")
 	pitchSplit = attitudeSplit[0].split("=")
@@ -61,20 +66,17 @@ def attitude():
 	rollSplit = attitudeSplit[2].split("=")
     #roll value
 	roll = rollSplit[1]
-            #Getting the UAS location in long and lat
-	gps = str(vehicle.location.global_relative_frame)
-            #splitting the string so we can get the value of longitude and latitude
+    #splitting the string so we can get the value of longitude and latitude
 	gpsSplit = gps.split(",")
 	latSplit = gpsSplit[0].split("=")
-            #value of the lat
+    #value of the lat
 	lat = latSplit[1]
 	lonSplit = gpsSplit[1].split("=")
-            #value of the long
+    #value of the long
 	lon = lonSplit[1]
 	altSplit = gpsSplit[2].split("=")
     #altitude value
 	alt = altSplit[1]
-
     #Send inputs as a string not int
 	pitch=str(pitch)
 	roll=str(roll)
@@ -82,16 +84,33 @@ def attitude():
 	lat=str(lat)
 	lon=str(lon)
 	alt=str(alt)
+	print("Embedded Data collected")
+
 
 #trigger the camera and geotags the photo with drone sensory data
-def triggerCommand(num,pitch,roll,yaw,lat,lon,alt):
-    filename = ('image'+ str(num) +'.jpg')
+def triggerCommandV2(filename):
+    print(filename)
+    file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
+    camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+    camera_file.save(filename)
+    print("Image Captured \n")
+
+def triggerCommandV1(filename):
     print(filename)
     cmd = ('gphoto2','--capture-image-and-download','--filename',filename)
     #executing the trigger command in ssh
     result2 = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    print(f'image {num} captured')
-   
+    print('Image Captured \n')
+
+def geotagCommandV2(filename,pitch,roll,yaw,lat,lon,alt):
+    #Geotagging photo with the attitude and gps coordinate
+    PYRALL = ('pitch:'+str(pitch)+' yaw:'+str(yaw)+' roll:'+str(roll)+ ' altitude:'+str(alt)+ ' longitude:'+str(lon)+ ' latitude:'+str(lat))
+    print(PYRALL)
+    with exiftool.ExifTool() as et:
+    	et.execute(b'-comment=' + PYRALL.encode('utf-8'), filename.encode('utf-8'))
+    print("Geotagging image is finished\n")
+
+def geotagCommandV1(filename,pitch,roll,yaw,lat,lon,alt):
     #geotagging image
     #Geotagging photo with the attitude and gps coordinate
     pyr = ('pitch:'+str(pitch)+' yaw:'+str(yaw)+' roll:'+str(roll))
@@ -101,23 +120,23 @@ def triggerCommand(num,pitch,roll,yaw,lat,lon,alt):
     tagLongCommand = ('exiftool', '-exif:gpslongitude=' +'\''+ str(lon) +'\'' , filename)
     tagAltCommand = ('exiftool', '-exif:gpsAltitude=' +'\''+ str(alt) +'\'' , filename)
 
-
     #executing the tag command in ssh
     subprocess.run(tagPYRCommand,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     subprocess.run(tagLatCommand,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     subprocess.run(tagLongCommand,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     subprocess.run(tagAltCommand,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    print(f"finished geotagging image {num}")
+    print("Geotagging image is finished\n")
 
 
 for x in range(len(triggerWp)):
+	filename = ('image'+ str(x+1) +'.jpg')
+	attitude()
+	triggerCommandV1(filename)
+	#triggerCommandV2(filename)
+	geotagCommandV1(filename,pitch,roll,yaw,lat,lon,alt)
+	#geotagCommandV2(filename,pitch,roll,yaw,lat,lon,alt)
+	time.sleep(10)
 
-	while True:
-		if(vehicle.commands.next-1 == triggerWp[x]):
-			print(f"Uas has arrived at waypoint {triggerWp[x]}. Now capturing image {x+1} \n")
-			attitude()
-			triggerCommand(x+1,pitch,roll,yaw,lat,lon,alt)			
-			break
 
 
 	

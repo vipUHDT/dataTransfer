@@ -12,7 +12,7 @@ HOST = '192.168.137.1'
 #port number can be anything but small numbers since the ports are occupied
 PORT = 5000
 #number of images to be taken
-num_of_images = 20
+num_of_images = 30
 
 
 filenames = []
